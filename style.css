@@ -163,8 +163,59 @@ dialog::backdrop{background:rgba(22,35,59,.5)}
 .item{grid-template-columns:72px minmax(0,1fr) auto}
 .order,.order > *{min-width:0}
 .wrap,.panel{max-width:100%}
-html,body{overflow-x:hidden}
+html{overflow-x:visible}body{overflow-x:hidden}
 @media (max-width:820px){
   .item{grid-template-columns:56px minmax(0,1fr)}
   .two{gap:10px}
+}
+
+
+/* ====== توافق كامل مع كل أحجام الموبايلات (صفحة الإدارة) ====== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+img,svg{max-width:100%}
+body{min-width:0;width:100%}
+
+.wrap,#work,#tabProducts,#tabOrders,#login,#f,.panel,.admin-list{width:100%;min-width:0;max-width:100%}
+.wrap{overflow-wrap:anywhere}
+.panel{padding:clamp(14px,4vw,28px)}
+.panel.form,#f{display:flex;flex-direction:column;gap:14px}
+#f>*{min-width:0;max-width:100%}
+.form label{min-width:0}
+.form input,.form select,.form textarea{width:100%;max-width:100%;min-width:0;font-size:16px} /* 16px يمنع زوم iOS */
+.form textarea{resize:vertical}
+.form input[type=color]{height:46px;padding:3px}
+.form select{appearance:auto}
+
+.admin-list{display:grid;grid-template-columns:minmax(0,1fr)}
+.item{grid-template-columns:72px minmax(0,1fr) auto}
+.item>*{min-width:0}
+.item b,.order b{overflow-wrap:anywhere}
+.order{width:100%}
+.order select{max-width:100%}
+.order-top{min-width:0}
+
+.row-between{flex-wrap:wrap}
+.tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;flex:0 0 auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.stat{min-width:0}
+.stat b{font-size:clamp(16px,5vw,22px);overflow-wrap:anywhere}
+
+.img-pick{grid-template-columns:96px minmax(0,1fr)}
+.file-btn{cursor:pointer;text-align:center}
+.toast{max-width:calc(100% - 24px);bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+
+@media (max-width:480px){
+  .img-pick{grid-template-columns:minmax(0,1fr);justify-items:start}
+  .img-pick>div{width:100%}
+  .item{grid-template-columns:56px minmax(0,1fr);padding:12px}
+  .item img{width:56px;height:56px}
+  .item .acts{grid-column:1/-1}
+  .item .acts .btn{width:100%}
+}
+@media (max-width:360px){
+  .two{grid-template-columns:minmax(0,1fr)}
+  .btn{padding:11px 16px}
 }
