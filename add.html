@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة المتجر | سفرية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .wrap{max-width:720px;margin:0 auto;padding:24px 16px 56px}
+  .wrap h1{font-size:26px}
+  .panel .form{padding:0}
+  .gap{margin-top:28px}
+</style>
+</head>
+<body>
+<div id="demoBar" class="demo-bar" hidden>وضع تجريبي: المنتجات بتتحفظ في متصفحك وبتظهر في المتجر على طول (افتحهم في نفس المتصفح).</div>
+<main class="wrap">
+  <div class="row-between">
+    <h1>إدارة المتجر</h1>
+    <a class="btn btn-ghost btn-sm" href="index.html" target="_blank">فتح المتجر</a>
+  </div>
+
+  <section id="login" class="panel" hidden>
+    <form id="loginForm" class="form">
+      <label>الإيميل<input name="email" type="email" required></label>
+      <label>كلمة المرور<input name="password" type="password" required></label>
+      <p class="error" id="loginErr" hidden></p>
+      <button class="btn btn-primary" type="submit">دخول</button>
+    </form>
+  </section>
+
+  <div id="work" hidden>
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-tab="products">المنتجات</button>
+      <button class="tab" data-tab="orders">الطلبات <span id="newBadge" class="badge" style="position:static;display:inline-grid;margin-inline-start:4px" hidden></span></button>
+    </div>
+    <div id="tabProducts">
+    <form id="f" class="panel form">
+      <div class="img-pick">
+        <img id="preview" alt="" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Crect width='10' height='10' fill='%23EEF2F6'/%3E%3C/svg%3E">
+        <div>
+          <label class="btn btn-ghost file-btn">اختيار صورة من الجهاز<input type="file" id="file" accept="image/*" hidden></label>
+          <label>أو رابط صورة (https)<input name="imageUrl" id="imageUrl" placeholder="اختياري"></label>
+        </div>
+      </div>
+      <label>اسم المنتج<input name="pname" required maxlength="80" placeholder="مثال: كابينة صلبة 20 بوصة"></label>
+      <div class="two">
+        <label>السعر<input name="price" type="number" min="0" step="1" required></label>
+        <label>الكمية المتاحة<input name="stock" type="number" min="0" step="1" value="10" required></label>
+      </div>
+      <div class="two">
+        <label>التصنيف<select name="category" id="cat"></select></label>
+        <label>اللون<input name="color" type="color" value="#2F6FED"></label>
+      </div>
+      <label>الوصف<textarea name="desc" rows="3" maxlength="300" placeholder="مميزات الشنطة: المقاس، الخامة، العجل..."></textarea></label>
+      <p class="hint">لو مفيش صورة، المتجر هيرسم شنطة بنفس اللون والتصنيف.</p>
+      <p class="error" id="err" hidden></p>
+      <button class="btn btn-primary wide" type="submit" id="save">حفظ وإظهار في المتجر</button>
+    </form>
+
+    <h2 class="gap">المنتجات الحالية</h2>
+    <div id="list" class="admin-list" style="margin-top:14px"></div>
+    </div>
+    <div id="tabOrders" hidden>
+      <div class="stats" id="stats" style="margin-bottom:16px"></div>
+      <div id="orders" class="admin-list"></div>
+    </div>
+    <p class="gap"><a href="#" id="logout" hidden>تسجيل خروج</a></p>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="firebase-config.js"></script>
+<script src="products.js"></script>
+<script>
+(function () {
+  const { firebaseConfig, ADMIN_EMAIL, STORE } = window.APP_CONFIG;
+  const CATS = window.APP_CONFIG.CATEGORIES;
+  const DEMO = !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR");
+  const KEY = "sf_products2";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const money = (n) => Number(n || 0).toLocaleString("ar-EG") + " " + STORE.currency;
+  const safeImg = (u) => (/^(https:\/\/|data:image\/)/i.test(u || "") ? u : "");
+  let fb = null, image = "";
+  const BLANK = $("#preview").src;
+
+  function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; setTimeout(() => (t.hidden = true), 2400); }
+
+  /* ---- بيانات ---- */
+  const ls = {
+    get() {
+      let v = null; try { v = JSON.parse(localStorage.getItem(KEY)); } catch {}
+      if (!v) { v = (window.SAMPLE_PRODUCTS || []).map((p, i) => ({ ...p, id: "demo" + i, createdAt: Date.now() - i * 1000 })); this.set(v); }
+      return v;
+    },
+    set(v) { localStorage.setItem(KEY, JSON.stringify(v)); },
+  };
+  const api = {
+    async list() {
+      if (DEMO) return ls.get();
+      const { fs, db } = fb;
+      const s = await fs.getDocs(fs.query(fs.collection(db, "products"), fs.orderBy("createdAt", "desc")));
+      return s.docs.map((d) => ({ id: d.id, ...d.data() }));
+    },
+    async add(p) {
+      if (DEMO) { const l = ls.get(); l.unshift({ ...p, id: "p" + Date.now(), createdAt: Date.now() }); return ls.set(l); }
+      return fb.fs.addDoc(fb.fs.collection(fb.db, "products"), { ...p, createdAt: Date.now() });
+    },
+    async del(id) {
+      if (DEMO) return ls.set(ls.get().filter((x) => x.id !== id));
+      return fb.fs.deleteDoc(fb.fs.doc(fb.db, "products", id));
+    },
+    async orders() {
+      if (DEMO) { try { return JSON.parse(localStorage.getItem("sf_orders")) || []; } catch { return []; } }
+      const { fs, db } = fb;
+      const s = await fs.getDocs(fs.query(fs.collection(db, "orders"), fs.orderBy("createdAt", "desc")));
+      return s.docs.map((d) => ({ id: d.id, ...d.data() }));
+    },
+    async setStatus(id, status) {
+      if (DEMO) { const l = await this.orders(); const o = l.find((x) => x.id === id); if (o) o.status = status; return localStorage.setItem("sf_orders", JSON.stringify(l)); }
+      return fb.fs.updateDoc(fb.fs.doc(fb.db, "orders", id), { status });
+    },
+    async seed() { for (const p of (window.SAMPLE_PRODUCTS || [])) await this.add({ ...p }); },
+  };
+
+  /* ---- صورة ---- */
+  function compress(file, max = 720) {
+    return new Promise((res, rej) => {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const r = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", 0.78));
+      };
+      img.onerror = rej; img.src = url;
+    });
+  }
+
+  /* ---- عرض ---- */
+  async function renderList() {
+    let list = [];
+    try { list = await api.list(); } catch (e) { console.error(e); toast("مقدرناش نحمّل المنتجات"); }
+    $("#list").innerHTML = list.length
+      ? list.map((p) => `<div class="item">
+          <img src="${esc(safeImg(p.image))}" alt="" onerror="this.style.visibility='hidden'">
+          <div><b>${esc(p.name)}</b><div class="meta">${esc(p.category)} · ${money(p.price)} · المتاح ${Number(p.stock).toLocaleString("ar-EG")}</div></div>
+          <div class="acts"><button class="btn btn-danger btn-sm" data-del="${esc(p.id)}">حذف</button></div>
+        </div>`).join("")
+      : `<div class="empty">لسه مفيش منتجات. اضف منتج من الفورم فوق، أو <button class="btn btn-sun btn-sm" data-seed="1">ضيف 5 منتجات أمثلة</button></div>`;
+  }
+
+  const STATUSES = ["جديد", "قيد التجهيز", "تم الشحن", "تم التسليم", "ملغي"];
+  async function renderOrders() {
+    let o = [];
+    try { o = await api.orders(); } catch (e) { console.error(e); toast("مقدرناش نحمّل الطلبات"); }
+    const fresh = o.filter((x) => x.status === "جديد").length;
+    const revenue = o.filter((x) => x.status !== "ملغي").reduce((t, x) => t + (x.total || 0), 0);
+    $("#newBadge").hidden = !fresh; $("#newBadge").textContent = fresh.toLocaleString("ar-EG");
+    $("#stats").innerHTML = `<div class="stat"><b>${fresh.toLocaleString("ar-EG")}</b><span>طلبات جديدة</span></div>
+      <div class="stat"><b>${o.length.toLocaleString("ar-EG")}</b><span>كل الطلبات</span></div>
+      <div class="stat"><b>${money(revenue)}</b><span>إجمالي المبيعات</span></div>`;
+    $("#orders").innerHTML = o.length ? o.map((x) => {
+      const wa = "https://wa.me/2" + encodeURIComponent(x.phone) + "?text=" + encodeURIComponent("أهلاً " + x.name + "، بخصوص طلبك من " + STORE.name);
+      return `<div class="order">
+        <div class="order-top"><b>${esc(x.name)}</b><span class="st">${esc(x.status)}</span></div>
+        <div class="meta">${new Date(x.createdAt).toLocaleString("ar-EG")} · <a href="tel:${esc(x.phone)}">${esc(x.phone)}</a> · <a href="${wa}" target="_blank" rel="noopener">واتساب</a></div>
+        <div>${esc(x.city)} - ${esc(x.address)}${x.notes ? `<br><span class="meta">ملاحظات: ${esc(x.notes)}</span>` : ""}</div>
+        <ul>${(x.items || []).map((i) => `<li>${esc(i.name)} × ${Number(i.qty).toLocaleString("ar-EG")}</li>`).join("")}</ul>
+        <div class="order-top"><b>${money(x.total)}</b>
+          <select data-status="${esc(x.id)}" aria-label="حالة الطلب">${STATUSES.map((t) => `<option ${t === x.status ? "selected" : ""}>${t}</option>`).join("")}</select></div>
+      </div>`;
+    }).join("") : `<div class="empty">مفيش طلبات لحد دلوقتي.</div>`;
+  }
+
+  function showWork(ok) {
+    $("#login").hidden = ok; $("#work").hidden = !ok;
+    $("#logout").hidden = DEMO || !ok;
+    if (ok) { renderList(); renderOrders(); }
+  }
+
+  /* ---- أحداث ---- */
+  $("#cat").innerHTML = CATS.map((c) => `<option>${esc(c)}</option>`).join("");
+
+  $("#file").onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try { image = await compress(f); $("#preview").src = image; $("#imageUrl").value = ""; }
+    catch { toast("الصورة دي مش مدعومة"); }
+  };
+  $("#imageUrl").oninput = (e) => { const u = e.target.value.trim(); if (safeImg(u)) { image = ""; $("#preview").src = u; } };
+
+  $("#f").onsubmit = async (e) => {
+    e.preventDefault();
+    const f = e.target, err = $("#err"); err.hidden = true;
+    const url = f.imageUrl.value.trim();
+    if (url && !safeImg(url)) { err.textContent = "رابط الصورة لازم يبدأ بـ https://"; err.hidden = false; return; }
+    const p = {
+      name: f.pname.value.trim(), price: Number(f.price.value), stock: Number(f.stock.value),
+      category: f.category.value, color: f.color.value, desc: f.desc.value.trim(),
+      image: url || image || "",
+    };
+    const b = $("#save"); b.disabled = true;
+    try {
+      await api.add(p);
+      toast("تمت إضافة «" + p.name + "» وهتظهر في المتجر");
+      f.reset(); image = ""; $("#preview").src = BLANK;
+      renderList();
+    } catch (x) {
+      console.error(x); err.textContent = "معرفناش نحفظ المنتج. اتأكد إنك مسجل دخول بحساب الأدمن."; err.hidden = false;
+    } finally { b.disabled = false; }
+  };
+
+  document.addEventListener("click", async (e) => {
+    const d = (e.target.closest("button") || {}).dataset || {};
+    if (d.del && confirm("تحذف المنتج ده؟")) { await api.del(d.del); toast("تم الحذف"); renderList(); }
+    if (d.seed) { await api.seed(); toast("تمت إضافة المنتجات الأمثلة"); renderList(); }
+    if (d.tab) {
+      document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("on", b.dataset.tab === d.tab));
+      $("#tabProducts").hidden = d.tab !== "products";
+      $("#tabOrders").hidden = d.tab !== "orders";
+      if (d.tab === "orders") renderOrders();
+    }
+  });
+  document.addEventListener("change", async (e) => {
+    const id = e.target.dataset && e.target.dataset.status;
+    if (id) { await api.setStatus(id, e.target.value); toast("تم تحديث حالة الطلب"); renderOrders(); }
+  });
+  window.addEventListener("focus", () => { if (!$("#work").hidden) renderOrders(); });
+
+  $("#loginForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const d = new FormData(e.target), er = $("#loginErr"); er.hidden = true;
+    try {
+      await fb.auth.signInWithEmailAndPassword(fb.au, d.get("email"), d.get("password"));
+      if (ADMIN_EMAIL && fb.au.currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        const got = fb.au.currentUser.email;
+        await fb.auth.signOut(fb.au);
+        throw { code: "not-admin", got };
+      }
+      showWork(true);
+    } catch (x) {
+      console.error(x);
+      const m = {
+        "not-admin": "تسجيل الدخول نجح، بس الإيميل (" + (x.got || "") + ") مختلف عن ADMIN_EMAIL في ملف firebase-config.js. خليهم نفس الإيميل بالظبط.",
+        "auth/invalid-credential": "الإيميل أو كلمة المرور غلط.",
+        "auth/invalid-email": "شكل الإيميل غلط.",
+        "auth/user-not-found": "الإيميل ده مش مسجل في Firebase Authentication.",
+        "auth/wrong-password": "كلمة المرور غلط.",
+        "auth/too-many-requests": "محاولات كتير. استنى شوية وجرّب تاني.",
+        "auth/operation-not-supported-in-this-environment": "افتح الصفحة من http://localhost:8000 أو من GitHub Pages، مش بدبل كليك على الملف.",
+        "auth/unauthorized-domain": "ضيف الدومين ده في Firebase > Authentication > Settings > Authorized domains.",
+        "auth/operation-not-allowed": "فعّل Email/Password من Firebase > Authentication > Sign-in method.",
+        "auth/network-request-failed": "مشكلة في النت."
+      };
+      er.textContent = m[x && x.code] || ("حصل خطأ: " + ((x && (x.code || x.message)) || "غير معروف"));
+      er.hidden = false;
+    }
+  };
+  $("#logout").onclick = async (e) => { e.preventDefault(); await fb.auth.signOut(fb.au); showWork(false); };
+
+  /* ---- تشغيل ---- */
+  (async function init() {
+    if (DEMO) { $("#demoBar").hidden = false; return showWork(true); }
+    const base = "https://www.gstatic.com/firebasejs/10.12.2/";
+    const [app, fs, auth] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-firestore.js"), import(base + "firebase-auth.js")]);
+    const a = app.initializeApp(firebaseConfig);
+    fb = { fs, auth, db: fs.getFirestore(a), au: auth.getAuth(a) };
+    await new Promise((r) => { const off = auth.onAuthStateChanged(fb.au, () => { off(); r(); }); });
+    const u = fb.au.currentUser;
+    showWork(!!u && (!ADMIN_EMAIL || u.email === ADMIN_EMAIL));
+  })().catch((e) => { console.error(e); toast("فشل تحميل Firebase. راجع الإعدادات."); });
+})();
+</script>
+</body>
+</html>

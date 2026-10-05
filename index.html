@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سفرية | حقائب سفر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="demoBar" class="demo-bar" hidden>وضع تجريبي: البيانات محفوظة في متصفحك فقط. اربط Firebase عشان تتسجل أونلاين (الخطوات في README).</div>
+
+<header class="top">
+  <a class="brand" href="#" id="brand"><span class="brand-mark" aria-hidden="true"></span><span id="brandName">سفرية</span></a>
+  <label class="search">
+    <span class="sr">بحث</span>
+    <input id="search" type="search" placeholder="ابحث عن شنطة...">
+  </label>
+  <nav class="top-actions">
+    <button class="cart-btn" id="openCart" aria-label="فتح السلة">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1 12H7L6 7z"/><path d="M9 7V6a3 3 0 0 1 6 0v1"/></svg>
+      <span id="cartCount" class="badge" hidden>0</span>
+    </button>
+  </nav>
+</header>
+
+<main id="storeView">
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>شنطة تسافر بيها وانت مطمّن</h1>
+      <p>حقائب كابينة ومتوسطة وكبيرة، خامات قوية وعجل بيلف بسلاسة. التوصيل لكل المحافظات والدفع عند الاستلام.</p>
+      <a class="btn btn-primary" href="#shop">شوف الحقائب</a>
+    </div>
+    <div class="tag-wrap" id="heroTag"></div>
+  </section>
+
+  <section id="shop" class="shop">
+    <div class="toolbar">
+      <div class="chips" id="chips" role="tablist" aria-label="التصنيفات"></div>
+      <label class="sort">
+        <span class="sr">الترتيب</span>
+        <select id="sort">
+          <option value="new">الأحدث</option>
+          <option value="low">السعر: الأقل أولًا</option>
+          <option value="high">السعر: الأعلى أولًا</option>
+        </select>
+      </label>
+    </div>
+    <div id="grid" class="grid" aria-live="polite"></div>
+  </section>
+
+  <footer class="foot">
+    <span id="footName">سفرية</span>
+    <a id="waLink" href="#" target="_blank" rel="noopener">كلمنا على واتساب</a>
+  </footer>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="cart" aria-label="السلة" hidden>
+  <div class="drawer-head"><h2>سلتك</h2><button class="icon-btn" id="closeCart" aria-label="إغلاق">✕</button></div>
+  <div id="cartItems" class="cart-items"></div>
+  <div class="drawer-foot">
+    <div class="row-between total"><span>الإجمالي</span><b id="cartTotal">0</b></div>
+    <button class="btn btn-primary wide" id="goCheckout">إتمام الطلب</button>
+  </div>
+</aside>
+
+<dialog id="checkout">
+  <form method="dialog" class="dlg-head"><h2>بيانات التوصيل</h2><button class="icon-btn" aria-label="إغلاق">✕</button></form>
+  <form id="orderForm" class="form">
+    <label>الاسم<input name="name" required maxlength="80" autocomplete="name"></label>
+    <label>رقم الموبايل<input name="phone" required inputmode="tel" placeholder="01012345678" autocomplete="tel"></label>
+    <label>المحافظة<input name="city" required maxlength="40"></label>
+    <label>العنوان بالتفصيل<textarea name="address" required rows="2" maxlength="300"></textarea></label>
+    <label>ملاحظات (اختياري)<input name="notes" maxlength="200"></label>
+    <p class="hint">الدفع عند الاستلام. هنكلمك لتأكيد الطلب.</p>
+    <p class="error" id="orderError" hidden></p>
+    <button class="btn btn-primary wide" type="submit" id="submitOrder">تأكيد الطلب</button>
+  </form>
+</dialog>
+
+<dialog id="done">
+  <div class="done">
+    <div class="done-mark">✓</div>
+    <h2>تم استلام طلبك</h2>
+    <p id="doneText"></p>
+    <form method="dialog"><button class="btn btn-primary wide">تمام</button></form>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="firebase-config.js"></script>
+<script src="products.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
