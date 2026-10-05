@@ -20,6 +20,7 @@ a{color:inherit}
 /* header */
 .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:12px clamp(16px,4vw,48px);background:rgba(243,245,248,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:"Readex Pro",sans-serif;font-weight:700;font-size:22px}
+.brand-logo{height:40px;width:auto;max-width:120px;object-fit:contain;border-radius:8px;display:block}
 .brand-mark{width:26px;height:26px;border-radius:8px;background:var(--ink);position:relative}
 .brand-mark::after{content:"";position:absolute;inset:7px 6px 6px;border-radius:3px;background:var(--sun)}
 .search{flex:1;max-width:420px;margin-inline:auto}
