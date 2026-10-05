@@ -1,4 +1,4 @@
-const { firebaseConfig, ADMIN_EMAIL, STORE } = window.APP_CONFIG;
+const { firebaseConfig, STORE } = window.APP_CONFIG;
 
 const CATEGORIES = window.APP_CONFIG.CATEGORIES || ["كابينة", "متوسطة", "كبيرة", "حقائب ظهر", "أطقم"];
 const STATUSES = ["جديد", "قيد التجهيز", "تم الشحن", "تم التسليم", "ملغي"];

@@ -76,7 +76,7 @@
 <script src="products.js"></script>
 <script>
 (function () {
-  const { firebaseConfig, ADMIN_EMAIL, STORE } = window.APP_CONFIG;
+  const { firebaseConfig, STORE } = window.APP_CONFIG;
   const CATS = window.APP_CONFIG.CATEGORIES;
   const DEMO = !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR");
   const KEY = "sf_products2";
@@ -236,16 +236,10 @@
     const d = new FormData(e.target), er = $("#loginErr"); er.hidden = true;
     try {
       await fb.auth.signInWithEmailAndPassword(fb.au, d.get("email"), d.get("password"));
-      if (ADMIN_EMAIL && fb.au.currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-        const got = fb.au.currentUser.email;
-        await fb.auth.signOut(fb.au);
-        throw { code: "not-admin", got };
-      }
       showWork(true);
     } catch (x) {
       console.error(x);
       const m = {
-        "not-admin": "تسجيل الدخول نجح، بس الإيميل (" + (x.got || "") + ") مختلف عن ADMIN_EMAIL في ملف firebase-config.js. خليهم نفس الإيميل بالظبط.",
         "auth/invalid-credential": "الإيميل أو كلمة المرور غلط.",
         "auth/invalid-email": "شكل الإيميل غلط.",
         "auth/user-not-found": "الإيميل ده مش مسجل في Firebase Authentication.",
@@ -271,7 +265,7 @@
     fb = { fs, auth, db: fs.getFirestore(a), au: auth.getAuth(a) };
     await new Promise((r) => { const off = auth.onAuthStateChanged(fb.au, () => { off(); r(); }); });
     const u = fb.au.currentUser;
-    showWork(!!u && (!ADMIN_EMAIL || u.email === ADMIN_EMAIL));
+    showWork(!!u);
   })().catch((e) => { console.error(e); toast("فشل تحميل Firebase. راجع الإعدادات."); });
 })();
 </script>

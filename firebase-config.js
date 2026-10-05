@@ -12,8 +12,7 @@ window.APP_CONFIG = {
   appId: "1:13708174069:web:87f0ebfb75ddd84766dbbc"
  },
 
-// إيميل حسابك كأدمن (نفس الإيميل اللي هتنشئه في Firebase Authentication)
-ADMIN_EMAIL: "salama.m@gmail.com",
+// مفيش إيميل أدمن هنا: أي حساب تضيفه من Firebase > Authentication > Users يقدر يدخل صفحة add.html
 
 // تصنيفات الشنط (بتظهر في المتجر وفي صفحة إضافة المنتجات)
 CATEGORIES: ["كابينة", "متوسطة", "كبيرة", "حقائب ظهر", "أطقم"],
