@@ -151,3 +151,5 @@ dialog::backdrop{background:rgba(22,35,59,.5)}
   .item .acts{grid-column:1/-1}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.foot-links{display:flex;gap:16px;flex-wrap:wrap}

@@ -256,6 +256,8 @@ function bind() {
   $("#brandName").textContent = STORE.name;
   $("#footName").textContent = "© " + STORE.name;
   $("#waLink").href = "https://wa.me/" + STORE.whatsapp;
+  $("#telLink").href = "tel:" + STORE.phone;
+  $("#telLink").textContent = "اتصل بينا: " + STORE.phone;
   document.title = STORE.name + " | حقائب سفر";
   renderChips(); renderCartCount(); bind();
   try { await initData(); } catch (e) { console.error(e); toast("فشل تحميل Firebase. راجع الإعدادات."); }
