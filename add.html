@@ -75,8 +75,7 @@
 <script src="products.js"></script>
 <script>
 (function () {
-  const { firebaseConfig } = window.APP_CONFIG;
-  const STORE = { ...window.APP_CONFIG.STORE, name: "شنطة سفر" };
+  const { firebaseConfig, STORE } = window.APP_CONFIG;
   const CATS = window.APP_CONFIG.CATEGORIES;
   const DEMO = !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR");
   const KEY = "sf_products2";
