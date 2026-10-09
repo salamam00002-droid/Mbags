@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>إدارة المتجر | Maivel Bags</title>
-<link rel="icon" type="image/png" href="001.png">
+<title>إدارة المتجر | شنطة سفر</title>
+<link rel="icon" type="image/jpeg" href="001.jpg">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
@@ -17,7 +17,7 @@
 <div id="demoBar" class="demo-bar" hidden>وضع تجريبي: المنتجات بتتحفظ في متصفحك وبتظهر في المتجر على طول (افتحهم في نفس المتصفح).</div>
 <main class="wrap">
   <div class="row-between">
-    <h1 style="display:flex;align-items:center;gap:10px"><img src="001.png" alt="" style="height:36px;border-radius:8px" onerror="this.hidden=true">إدارة المتجر</h1>
+    <h1 style="display:flex;align-items:center;gap:10px"><img src="001.jpg" alt="" style="height:36px;border-radius:8px" onerror="this.hidden=true">إدارة المتجر</h1>
     <a class="btn btn-ghost btn-sm" href="index.html" target="_blank">فتح المتجر</a>
   </div>
 
@@ -75,7 +75,8 @@
 <script src="products.js"></script>
 <script>
 (function () {
-  const { firebaseConfig, STORE } = window.APP_CONFIG;
+  const { firebaseConfig } = window.APP_CONFIG;
+  const STORE = { ...window.APP_CONFIG.STORE, name: "شنطة سفر" };
   const CATS = window.APP_CONFIG.CATEGORIES;
   const DEMO = !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR");
   const KEY = "sf_products2";

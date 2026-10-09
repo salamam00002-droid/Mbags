@@ -1,4 +1,5 @@
-const { firebaseConfig, STORE } = window.APP_CONFIG;
+const { firebaseConfig } = window.APP_CONFIG;
+const STORE = { ...window.APP_CONFIG.STORE, name: "شنطة سفر" };
 
 const CATEGORIES = window.APP_CONFIG.CATEGORIES || ["كابينة", "متوسطة", "كبيرة", "حقائب ظهر", "أطقم"];
 const STATUSES = ["جديد", "قيد التجهيز", "تم الشحن", "تم التسليم", "ملغي"];
@@ -258,7 +259,7 @@ function bind() {
   $("#waLink").href = "https://wa.me/" + STORE.whatsapp;
   $("#telLink").href = "tel:" + STORE.phone;
   $("#telLink").textContent = "اتصل بينا: " + STORE.phone;
-  document.title = STORE.name + " | حقائب سفر";
+  document.title = STORE.name;
   renderChips(); renderCartCount(); bind();
   try { await initData(); } catch (e) { console.error(e); toast("فشل تحميل Firebase. راجع الإعدادات."); }
   await loadProducts();
